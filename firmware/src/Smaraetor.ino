@@ -18,7 +18,6 @@ void setup() {
   Serial.begin(115200);
   delay(2000);
   sensors.begin();
-  Wire.begin(8, 9); // SDA, SCL
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
   display.setTextSize(1);
@@ -38,6 +37,7 @@ void loop() {
   display.print(tempC, 2);
   display.println(" Degree Celsius");
   display.display();
-
+  Serial.print("Temperature: ");
+  Serial.print(tempC, 2);
   delay(2000);
 }
