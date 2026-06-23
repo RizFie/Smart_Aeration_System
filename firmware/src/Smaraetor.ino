@@ -1,6 +1,3 @@
-#include "soc/soc.h"
-#include "soc/rtc_cntl_reg.h"
-
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -21,8 +18,6 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 void setup() {
-// Keep the brownout disabled for this test
-  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
 
   Serial.begin(115200);
   delay(2000); 
@@ -33,14 +28,10 @@ void setup() {
   Serial.println("Sensors initialized!");
 
   Serial.println("Step 2: Initializing OLED Display...");
-  // If the log stops right here, your I2C pins are wrong and it's hanging!
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   Serial.println("OLED initialized!");
 
   Serial.println("Step 3: Turning on WiFi Radio...");
-  // If the log stops right here, it's definitively a raw power drop killing the CPU
-  WiFi.mode(WIFI_STA); // Forces Station mode, preventing it from wasting power looking for Access Point connections
-  WiFi.setTxPower(WIFI_POWER_8_5dBm); // Throttles the radio transmit power to prevent the massive current spike
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   while (WiFi.status() != WL_CONNECTED) {
