@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSensorData } from "@/hooks/useSensorData";
 
 // --- Types ---
 type PumpStatus = "RUNNING" | "IDLE";
@@ -8,9 +9,10 @@ type TempStatus = "CRITICAL" | "NORMAL";
 
 // --- Mock data (replace with Firebase hooks later) ---
 const TEMP_THRESHOLD = 26.0;
-const currentTemp = 28.5;
 const pumpStatus: PumpStatus = "RUNNING";
 const batteryLevel = 100;
+
+
 
 const activityLog = [
   {
@@ -102,8 +104,8 @@ function ActivityIcon({ type, className }: { type: string; className?: string })
   return <CheckIcon className={className} />;
 }
 
-function TempStatus({ temp, threshold }: { temp: number; threshold: number }) {
-  const isHigh = temp > threshold;
+function TempStatus({ temp, threshold }: { temp: number | null; threshold: number }) {
+  const isHigh = temp !== null && temp > threshold;
   return (
     <div
       className={`rounded-2xl p-5 transition-all duration-500 ${
@@ -122,7 +124,7 @@ function TempStatus({ temp, threshold }: { temp: number; threshold: number }) {
               isHigh ? "text-red-500" : "text-emerald-600"
             }`}
           >
-            {temp.toFixed(1)}
+            {temp !== null ? temp.toFixed(2) : "--"}
             <span className="text-3xl font-semibold">°C</span>
           </p>
         </div>
@@ -237,7 +239,20 @@ function NavIcon({ label }: { label: string }) {
 
 // --- Main Page ---
 export default function DashboardPage() {
-  const tempStatus: TempStatus = currentTemp > TEMP_THRESHOLD ? "CRITICAL" : "NORMAL";
+
+  const { data, loading } = useSensorData("esp32_01");
+  const currentTemp = data?.temperature ?? null;
+
+    if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-100">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-slate-400">Connecting to sensor...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center font-sans">

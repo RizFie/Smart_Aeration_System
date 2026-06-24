@@ -12,6 +12,8 @@
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
 #define ONE_WIRE_BUS 4
+#define SDA_PIN 21
+#define SCL_PIN 22
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 OneWire oneWire(ONE_WIRE_BUS);
@@ -28,7 +30,12 @@ void setup() {
   Serial.println("Sensors initialized!");
 
   Serial.println("Step 2: Initializing OLED Display...");
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  Wire.begin(SDA_PIN, SCL_PIN);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("OLED FAILED: Check wiring or I2C address!");
+  }
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
   Serial.println("OLED initialized!");
 
   Serial.println("Step 3: Turning on WiFi Radio...");
@@ -71,7 +78,6 @@ void loop() {
     int httpResponseCode = http.PUT(payload);
     Serial.print("Response: ");
     Serial.println(httpResponseCode);
-
     http.end();
   }
 
