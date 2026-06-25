@@ -157,8 +157,8 @@ function PumpCard({ status }: { status: PumpStatus }) {
     <div
       className={`rounded-2xl p-5 text-white transition-all duration-500 ${
         isRunning
-          ? "bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-200"
-          : "bg-gradient-to-br from-slate-400 to-slate-600"
+          ? "bg-linear-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-200"
+          : "bg-linear-to-br from-slate-400 to-slate-600"
       }`}
     >
       <div className="flex justify-between items-center">
