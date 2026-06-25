@@ -14,6 +14,7 @@
 #define ONE_WIRE_BUS 4
 #define SDA_PIN 21
 #define SCL_PIN 22
+#define PUMP_PIN 25
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 OneWire oneWire(ONE_WIRE_BUS);
@@ -46,6 +47,9 @@ void setup() {
     Serial.print(".");
   }
   Serial.println("\nStep 4: WiFi Connected!");
+
+  pinMode(PUMP_PIN, OUTPUT);
+  digitalWrite(PUMP_PIN, LOW); // Ensure pump is off initially
 }
 
 void loop() {
@@ -81,5 +85,6 @@ void loop() {
     http.end();
   }
 
+  digitalWrite(PUMP_PIN, HIGH); // Turn on the pump
   delay(5000);
 }
