@@ -2,41 +2,16 @@
 
 import { useState } from "react";
 import { useSensorData } from "@/hooks/useSensorData";
+import { useLogData } from "@/hooks/useLogData";
 
 // --- Types ---
 type PumpStatus = "RUNNING" | "IDLE";
 type TempStatus = "CRITICAL" | "NORMAL";
 
 // --- Mock data (replace with Firebase hooks later) ---
-const TEMP_THRESHOLD = 26.0;
+const TEMP_THRESHOLD = 35.0;
 const pumpStatus: PumpStatus = "RUNNING";
 const batteryLevel = 100;
-
-
-
-const activityLog = [
-  {
-    id: 1,
-    icon: "cpu",
-    message: "Pump automatically started (Temp > 26°C)",
-    time: "Just now",
-    color: "text-amber-500",
-  },
-  {
-    id: 2,
-    icon: "thermometer",
-    message: "Temp exceeded safe limit (26.1°C)",
-    time: "5m ago",
-    color: "text-red-500",
-  },
-  {
-    id: 3,
-    icon: "check",
-    message: "System initialized successfully",
-    time: "1h ago",
-    color: "text-emerald-500",
-  },
-];
 
 // --- Icons (inline SVG to avoid extra dependencies) ---
 function WaterIcon() {
@@ -105,7 +80,7 @@ function ActivityIcon({ type, className }: { type: string; className?: string })
 }
 
 function TempStatus({ temp, threshold }: { temp: number | null; threshold: number }) {
-  const isHigh = temp !== null && temp > threshold;
+  const isHigh = temp !== null && temp >= threshold;
   return (
     <div
       className={`rounded-2xl p-5 transition-all duration-500 ${
@@ -185,23 +160,44 @@ function PumpCard({ status }: { status: PumpStatus }) {
   );
 }
 
-function ActivityLog() {
+function ActivityLog({ logData }: { logData: any }) {
+  // Helper function to format timestamp to Malaysia Time (UTC+8)
+  const formatMYT = (timestamp: number) => {
+    if (!timestamp) return "Unknown time";
+    
+    return new Date(timestamp).toLocaleString('en-MY', {
+      timeZone: 'Asia/Kuala_Lumpur',
+      hour12: true,
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
   return (
     <div>
       <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
         System Activity
       </p>
       <div className="rounded-2xl border border-slate-100 divide-y divide-slate-100 overflow-hidden bg-white">
-        {activityLog.map((item) => (
+        {logData && Object.entries(logData).map(([key, logEntry]: [string, any]) => (
           <div
-            key={item.id}
+            key={key} 
             className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <ActivityIcon type={item.icon} className={`w-4 h-4 shrink-0 ${item.color}`} />
-              <span className="text-sm text-slate-700">{item.message}</span>
+              {/* Hardcoded icon and color (e.g., standard blue 'info' style) */}
+              <ActivityIcon type="info" className="w-4 h-4 shrink-0 text-blue-500" />
+              
+              <span className="text-sm text-slate-700">{logEntry.log}</span>
             </div>
-            <span className="text-xs text-slate-400 whitespace-nowrap ml-3">{item.time}</span>
+            
+            {/* Displaying the formatted timestamp */}
+            <span className="text-xs text-slate-400 whitespace-nowrap ml-3">
+              {formatMYT(logEntry.timestamp)}
+            </span>
           </div>
         ))}
       </div>
@@ -240,7 +236,10 @@ function NavIcon({ label }: { label: string }) {
 // --- Main Page ---
 export default function DashboardPage() {
 
+  // --- Hooks ---
   const { data, loading } = useSensorData("esp32_01");
+  const {logData, logLoading} = useLogData("esp32_01");
+
   const currentTemp = data?.temperature ?? null;
 
     if (loading) {
@@ -283,7 +282,7 @@ export default function DashboardPage() {
         <main className="flex-1 flex flex-col gap-4 px-5 py-5">
           <TempStatus temp={currentTemp} threshold={TEMP_THRESHOLD} />
           <PumpCard status={pumpStatus} />
-          <ActivityLog />
+          <ActivityLog logData={logData} />
         </main>
 
         {/* Footer Nav */}

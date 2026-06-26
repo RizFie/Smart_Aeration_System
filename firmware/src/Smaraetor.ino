@@ -15,76 +15,111 @@
 #define SDA_PIN 21
 #define SCL_PIN 22
 #define PUMP_PIN 25
+#define TEMP_THRESHOLD 35.0
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
-void setup() {
+bool pumpState = false;
 
-  Serial.begin(115200);
-  delay(2000); 
-  Serial.println("\n--- NEW BOOT STARTING ---");
-
-  Serial.println("Step 1: Initializing Temperature Sensor...");
-  sensors.begin();
-  Serial.println("Sensors initialized!");
-
-  Serial.println("Step 2: Initializing OLED Display...");
-  Wire.begin(SDA_PIN, SCL_PIN);
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println("OLED FAILED: Check wiring or I2C address!");
-  }
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  Serial.println("OLED initialized!");
-
-  Serial.println("Step 3: Turning on WiFi Radio...");
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\nStep 4: WiFi Connected!");
-
-  pinMode(PUMP_PIN, OUTPUT);
-  digitalWrite(PUMP_PIN, LOW); // Ensure pump is off initially
+// Function to control the pump state and log the reason
+void setPump(bool on, String reason) {
+  if (pumpState == on) return; // no change needed, skip
+  pumpState = on;
+  digitalWrite(PUMP_PIN, on ? HIGH : LOW);
+  Serial.println(reason);
+  pushLogToFirebase(reason);
 }
 
-void loop() {
-  // Read temperature from the sensor
-  sensors.requestTemperatures();
-  float tempC = sensors.getTempCByIndex(0);
-
-  // Display temperature on OLED
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.println("Temperature: ");
-  display.setCursor(0, 16);
-  display.print(tempC, 2);
-  display.println(" Degree Celsius");
-  display.display();
-
-  // Display temperature on Serial Monitor
-  Serial.println("Temperature: ");
-  Serial.println(tempC, 2);
-
+// Function to push temperature data to Firebase
+void pushTempToFirebase(float tempC) {
   if (WiFi.status() == WL_CONNECTED){
     HTTPClient http;
-    http.begin(FIREBASE_URL);
+    http.begin(FIREBASE_URL_SENSOR);
     http.addHeader("Content-Type", "application/json");
-    unsigned long timestamp = millis();
 
-    String payload = "{\"temperature\": " + String(tempC, 2) + 
-                      ", \"timestamp\": " + String(timestamp) + "}";
+   String payload = "{\"temperature\": " + String(tempC, 2) + 
+                     ", \"timestamp\": {\".sv\": \"timestamp\"}}";
     
     int httpResponseCode = http.PUT(payload);
     Serial.print("Response: ");
     Serial.println(httpResponseCode);
     http.end();
+  } else if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi not connected. Cannot push data to Firebase.");
+    return;
+  }
+}
+
+void pushLogToFirebase(String logMessage){
+  if (WiFi.status() == WL_CONNECTED){
+    HTTPClient http;
+    http.begin(FIREBASE_URL_LOGS);
+    http.addHeader("Content-Type", "application/json");
+
+    String payload = "{\"log\": \"" + logMessage + 
+                     "\", \"timestamp\": {\".sv\": \"timestamp\"}}";
+    
+    int LoghttpResponseCode = http.POST(payload);
+    Serial.print("Log Response: ");
+    Serial.println(LoghttpResponseCode);
+    http.end();
+  } else if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi not connected. Cannot push log to Firebase.");
+    return;
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(2000);
+  Serial.println("\n--- SMARAETOR BOOTING ---");
+
+  // Initialize the pump pin
+  pinMode(PUMP_PIN, OUTPUT);
+  digitalWrite(PUMP_PIN, LOW);  // pump OFF on boot
+  Serial.println("Step 1: Pump pin initialized (OFF)");
+
+  // Initialize the temperature sensor
+  sensors.begin();
+  Serial.println("Step 2: Temperature sensor initialized");
+
+  // Initialize the OLED display
+  Wire.begin(SDA_PIN, SCL_PIN);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("OLED FAILED: Check wiring or I2C address!");
+  }
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  Serial.println("Step 3: OLED initialized");
+
+  // Connect to WiFi
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Step 4: Connecting to WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi Connected!");
+}
+
+void loop() {
+  // Read temperature from the sensor
+  sensors.requestTemperatures();
+  float currentTemp = sensors.getTempCByIndex(0);
+
+  // Display temperature on Serial Monitor
+  Serial.println("Temperature: ");
+  Serial.println(currentTemp, 2);
+
+  pushTempToFirebase(currentTemp);
+
+  if (currentTemp >= TEMP_THRESHOLD) {
+    setPump(true, "Temperature above the threshold. Pump activated.");
+  } else {
+    setPump(false, "Temperature within normal range. Pump deactivated.");
   }
 
-  digitalWrite(PUMP_PIN, HIGH); // Turn on the pump
   delay(5000);
 }
