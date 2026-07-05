@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { ref, onValue, query, orderByChild, limitToLast, limitToFirst } from "firebase/database";
+import { ref, onValue, query, orderByChild, limitToLast } from "firebase/database";
 
-interface LogData {
+export interface LogEntry {
   log: string;
   timestamp: number;
 }
 
 export function useLogData(deviceId: string) {
-  const [data, setData] = useState<LogData | null>(null);
+  const [data, setData] = useState<Record<string, LogEntry> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
