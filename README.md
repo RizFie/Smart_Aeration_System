@@ -26,12 +26,13 @@ It is intentionally scoped as a strong foundation for future AI and robotics ext
 - Real-time water temperature measurement using DS18B20
 - Predictive trigger logic using rolling-window linear regression
 - Early pump activation based on forecasted threshold crossing
-- OLED local status display on device
 - Cloud logging to Firebase Realtime Database
 - Live dashboard with:
   - Current temperature and forecasted temperature
   - Slope trend visualization
   - Recent system activity logs
+
+Note: OLED display code remains in the firmware source as a legacy path from earlier prototypes, but it is not used in the final deployed version.
 
 ## System Architecture
 
@@ -39,10 +40,9 @@ It is intentionally scoped as a strong foundation for future AI and robotics ext
 flowchart LR
   A[DS18B20 Sensor] --> B[ESP32 Firmware]
   B --> C[Pump Control Relay]
-  B --> D[OLED Display]
-  B --> E[Firebase Realtime Database]
-  E --> F[Next.js Dashboard]
-  F --> G[Operator / Recruiter View]
+  B --> D[Firebase Realtime Database]
+  D --> E[Next.js Dashboard]
+  E --> F[Operator / Recruiter View]
 ```
 
 ## Repository Structure
