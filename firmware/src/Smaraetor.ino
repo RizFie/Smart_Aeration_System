@@ -170,7 +170,7 @@ void loop() {
     // --- Pump decision logic ---
   if (currentTemp >= TEMP_THRESHOLD) {
     setPump(true, "Temp above threshold. Pump activated.");
-  } else if (predictedTemp >= TEMP_THRESHOLD && slope >= SLOPE_TRIGGER) {
+  } else if (predictedTemp >= TEMP_THRESHOLD) { //&& slope >= SLOPE_TRIGGER
     setPump(true, "Predictive trigger: Temp rising fast. Pump activated early.");
   } else {
     setPump(false, "Temp within normal range. Pump deactivated.");
