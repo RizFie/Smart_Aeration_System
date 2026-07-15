@@ -13,7 +13,7 @@ Sensor and activity data are streamed to Firebase Realtime Database, then visual
 
 ## Why This Project
 
-I wanted to build something practical that sits at the intersection of:
+We wanted to build something practical that sits at the intersection of:
 
 - Embedded systems
 - Real-time decision making
