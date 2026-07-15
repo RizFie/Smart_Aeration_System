@@ -2,7 +2,7 @@
 
 An end-to-end IoT project for intelligent water temperature management, combining embedded control, cloud telemetry, and a live web dashboard.
 
-This project reflects my trajectory toward a career in AI + robotics: building reliable sensing and control loops first, then layering predictive behavior and data-driven monitoring on top.
+This project reflects my trajectory toward a career in AI + robotics: building reliable sensing and control loops first, then layering predictive behavior and data-driven monitoring on top. This project was developed as my group project for ITT569, Internet of Things.
 
 ## Project Summary
 
