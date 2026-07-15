@@ -1,4 +1,5 @@
-# Smart Aeration System
+# Smart Aeration System 
+# AquaTemp Pro
 
 An end-to-end IoT project for intelligent water temperature management, combining embedded control, cloud telemetry, and a live web dashboard.
 
